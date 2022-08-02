@@ -145,11 +145,7 @@ class ProphetDetectorModel(DetectorModel):
     ) -> None:
         if _no_prophet:
             raise RuntimeError("requires fbprophet to be installed")
-        if serialized_model:
-            self.model = model_from_json(serialized_model)
-        else:
-            self.model = None
-
+        self.model = model_from_json(serialized_model) if serialized_model else None
         self.score_func = score_func
         self.scoring_confidence_interval = scoring_confidence_interval
         self.remove_outliers = remove_outliers
@@ -250,7 +246,7 @@ class ProphetDetectorModel(DetectorModel):
         time_df = pd.DataFrame({PROPHET_TIME_COLUMN: data.time})
         predict_df = self.model.predict(time_df)
         zeros = np.zeros(len(data))
-        response = AnomalyResponse(
+        return AnomalyResponse(
             scores=TimeSeriesData(
                 time=data.time,
                 value=SCORE_FUNC_DICT[self.score_func.value](
@@ -271,10 +267,11 @@ class ProphetDetectorModel(DetectorModel):
             predicted_ts=TimeSeriesData(
                 time=data.time, value=predict_df[PROPHET_YHAT_COLUMN]
             ),
-            anomaly_magnitude_ts=TimeSeriesData(time=data.time, value=pd.Series(zeros)),
+            anomaly_magnitude_ts=TimeSeriesData(
+                time=data.time, value=pd.Series(zeros)
+            ),
             stat_sig_ts=TimeSeriesData(time=data.time, value=pd.Series(zeros)),
         )
-        return response
 
     @staticmethod
     def _remove_outliers(

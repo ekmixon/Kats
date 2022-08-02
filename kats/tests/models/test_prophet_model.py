@@ -16,10 +16,7 @@ from kats.models.prophet import ProphetModel, ProphetParams
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 

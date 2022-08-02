@@ -380,7 +380,7 @@ class StatSigDetectorModel(DetectorModel):
         )
         control_end_dt = test_start_dt
 
-        return control_start_dt, control_end_dt, test_start_dt, test_end_dt
+        return control_start_dt, control_end_dt, control_end_dt, test_end_dt
 
     def _init_control_test(self, data: TimeSeriesData):
         """

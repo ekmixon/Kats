@@ -578,9 +578,7 @@ class BOCPDetector(Detector):
             # Multivariate
             ts_names = self.data.value.columns
 
-        change_points_per_ts = {}
-        for ts_name in ts_names:
-            change_points_per_ts[ts_name] = []
+        change_points_per_ts = {ts_name: [] for ts_name in ts_names}
         for cp in change_points:
             change_points_per_ts[cp[1].ts_name].append(cp)
 
@@ -958,7 +956,7 @@ class _BayesOnlineChangePoint(Detector):
 
             ax2 = plt.subplot(212, sharex=ax1)
 
-            cp_plot_x = list(range(0, self.T - lag))
+            cp_plot_x = list(range(self.T - lag))
             cp_plot_y = np.copy(self.rt_posterior[lag : self.T, lag, ts_ix])
             # handle the fact that first point is not a changepoint
             cp_plot_y[0] = 0.0
@@ -1002,7 +1000,7 @@ class _BayesOnlineChangePoint(Detector):
                 )
                 # handle the fact that the first point is not a changepoint
                 change_prob[0] = 0.0
-            elif self.agg_cp:
+            else:
                 change_prob = self._calc_agg_cppprob(t)
 
             change_points = np.where(change_prob > threshold[t])[0]
@@ -1246,12 +1244,11 @@ class _NormalKnownPrec(_PredictiveModel):
             pred_arr: Array with predicted log probabilities for each starting point.
         """
 
-        pred_arr = self._norm_logpdf(
+        return self._norm_logpdf(
             x,
             self._mean_arr[self._maxT + self._ptr : self._maxT + self._ptr + t],
             self._std_arr[self._maxT + self._ptr : self._maxT + self._ptr + t],
         )
-        return pred_arr
 
     def pred_mean(self, t: int, x: float) -> np.ndarray:
         return self._mean_arr[self._maxT + self._ptr : self._maxT + self._ptr + t]
@@ -1687,7 +1684,7 @@ class _PoissonProcessModel(_PredictiveModel):
         # everything is already set up in __init__!
         pass
 
-    def pred_prob(self, t, x):  # predict the probability that time t, we have value x
+    def pred_prob(self, t, x):    # predict the probability that time t, we have value x
         """Predictive log probability of a new data point.
 
         Args:
@@ -1698,8 +1695,7 @@ class _PoissonProcessModel(_PredictiveModel):
             probs: array of log probabilities, for each starting point.
         """
 
-        probs = nbinom.logpmf(x, self._n[t], self._p[t])
-        return probs
+        return nbinom.logpmf(x, self._n[t], self._p[t])
 
     def pred_mean(self, t, x):
         """Predicted mean at the next time point.

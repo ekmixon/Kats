@@ -211,7 +211,7 @@ class HarmonicRegressionModel(Model):
             self.data.time, period, fourier_order
         )
 
-        steps = np.array(list(range(0, len(time_series.index))))
+        steps = np.array(list(range(len(time_series.index))))
         demeaned = time_series - time_series.mean()
 
         params, params_covariance = optimize.curve_fit(

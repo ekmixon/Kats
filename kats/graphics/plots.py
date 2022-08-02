@@ -35,11 +35,11 @@ def plot_scatter_with_confints(val: List[float], confint: np.ndarray, title) -> 
         raise RuntimeError("requires plotly to be installed")
     prediction_color = "#0072B2"
     error_color = "rgba(0, 114, 178, 0.2)"  # '#0072B2' with 0.2 opacity
-    fig = go.Figure(
+    return go.Figure(
         {
             "data": [
                 go.Scatter(
-                    x=list(range(0, len(val))),
+                    x=list(range(len(val))),
                     y=confint[:, 0],
                     name="ConfIntLow",
                     line={"color": error_color, "width": 0},
@@ -47,7 +47,7 @@ def plot_scatter_with_confints(val: List[float], confint: np.ndarray, title) -> 
                     showlegend=False,
                 ),
                 go.Scatter(
-                    x=list(range(0, len(val))),
+                    x=list(range(len(val))),
                     y=val,
                     mode="markers",
                     name=title,
@@ -56,7 +56,7 @@ def plot_scatter_with_confints(val: List[float], confint: np.ndarray, title) -> 
                     line={"color": prediction_color},
                 ),
                 go.Scatter(
-                    x=list(range(0, len(val))),
+                    x=list(range(len(val))),
                     y=confint[:, 1],
                     mode="lines",
                     name="ConfIntHight",
@@ -67,11 +67,12 @@ def plot_scatter_with_confints(val: List[float], confint: np.ndarray, title) -> 
                 ),
             ],
             "layout": go.Layout(
-                title=title, yaxis={"title": "Correlation"}, xaxis={"title": "Lag"}
+                title=title,
+                yaxis={"title": "Correlation"},
+                xaxis={"title": "Lag"},
             ),
         }
     )
-    return fig
 
 
 def make_fourier_plot(

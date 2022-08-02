@@ -48,7 +48,6 @@ class LSTMParams(Params):
 
     def validate_params(self):
         logging.info("Method validate_params() is not implemented.")
-        pass
 
 
 class LSTMForecast(nn.Module):
@@ -295,7 +294,7 @@ class LSTMModel(mm.Model):
             {
                 "name": "time_window",
                 "type": "choice",
-                "values": list(range(1, 20, 1)),
+                "values": list(range(1, 20)),
                 "value_type": "int",
                 "is_ordered": True,
             },

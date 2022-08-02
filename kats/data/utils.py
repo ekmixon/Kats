@@ -28,10 +28,7 @@ from kats.consts import TimeSeriesData
 def load_data(file_name):
     """load data for tests and tutorial notebooks"""
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -75,7 +72,4 @@ def load_air_passengers(return_ts=True):
     df = load_data("air_passengers.csv")
     df.columns = ["time", "y"]
 
-    if return_ts:
-        return TimeSeriesData(df)
-    else:
-        return df
+    return TimeSeriesData(df) if return_ts else df

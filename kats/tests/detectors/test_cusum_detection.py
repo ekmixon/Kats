@@ -30,10 +30,7 @@ statsmodels_ver = float(
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -260,7 +257,7 @@ class CUSUMDetectorTest(TestCase):
         duration = periodicity * total_cycles
         assert duration == int(duration)
         duration = int(duration)
-        harmonics = harmonics if harmonics else int(np.floor(periodicity / 2))
+        harmonics = harmonics or int(np.floor(periodicity / 2))
 
         lambda_p = 2 * np.pi / float(periodicity)
 
@@ -288,9 +285,7 @@ class CUSUMDetectorTest(TestCase):
             series[t] = np.sum(gamma_jtp1)
             gamma_jt = gamma_jtp1
             gamma_star_jt = gamma_star_jtp1
-        wanted_series = series[-duration:]  # Discard burn in
-
-        return wanted_series
+        return series[-duration:]
 
     def test_seasonality_with_increasing_trend_cp_index(self) -> None:
         self.assertGreaterEqual(

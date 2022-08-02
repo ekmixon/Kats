@@ -14,9 +14,7 @@ class SimplePickleSerializer:
             return str(o).lower()
         if isinstance(o, int):
             return str(o)
-        if isinstance(o, float):
-            return str(o)
-        return o.__dict__
+        return str(o) if isinstance(o, float) else o.__dict__
 
     def serialize(self, obj: Any) -> bytes:
         """Performs model saving.
@@ -28,10 +26,7 @@ class SimplePickleSerializer:
             A bytes object which is the compressed model.
         """
 
-        if obj is None:
-
-            return b""
-        return pickle.dumps(obj)
+        return b"" if obj is None else pickle.dumps(obj)
 
     def deserialize(self, serialized_data: bytes) -> Any:
         """Performs model decoding.
@@ -46,9 +41,7 @@ class SimplePickleSerializer:
         if serialized_data is None:
             return None
         decoded = serialized_data  # .decode("utf-8")
-        if not decoded:
-            return None
-        return pickle.loads(decoded)
+        return pickle.loads(decoded) if decoded else None
 
 
 def serialize_for_zippy(input: Any) -> bytes:

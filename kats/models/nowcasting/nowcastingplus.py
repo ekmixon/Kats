@@ -40,7 +40,7 @@ def poly(df, n):
     Takes the column x from the dataframe df and takes
     the value from x to the power n
     """
-    poly = pd.Series(df.x ** n, name="poly_" + str(n))
+    poly = pd.Series(df.x ** n, name=f"poly_{str(n)}")
     df = df.join(poly)
     return df
 
@@ -123,7 +123,7 @@ class NowcastingPlusModel(m.Model):
         # Add the poly columns to the df_poly
         for degree in [0, 1, 2, 3, 4, 5]:
             self.df_poly = poly(self.df_poly, degree)
-            poly_feature_names.append("poly_" + str(degree))
+            poly_feature_names.append(f"poly_{str(degree)}")
 
         # filterout + - inf, nan
         self.df_poly = self.df_poly[
@@ -153,16 +153,16 @@ class NowcastingPlusModel(m.Model):
 
         for n in [10, 15, 20, 25, 30]:
             self.df = MOM(self.df, n)
-            feature_names.append("MOM_" + str(n))
+            feature_names.append(f"MOM_{str(n)}")
         for n in [10, 15, 20, 25, 30]:
             self.df = ROC(self.df, n)
-            feature_names.append("ROC_" + str(n))
+            feature_names.append(f"ROC_{str(n)}")
         for n in [1, 2, 3, 4, 5]:
             self.df = LAG(self.df, n)
-            feature_names.append("LAG_" + str(n))
+            feature_names.append(f"LAG_{str(n)}")
         for n in [10, 20, 30]:
             self.df = MA(self.df, n)
-            feature_names.append("MA_" + str(n))
+            feature_names.append(f"MA_{str(n)}")
 
         self.df = self.df[
             ~self.df.isin([np.nan, np.inf, -np.inf]).any(1)
@@ -232,8 +232,7 @@ class NowcastingPlusModel(m.Model):
     def predict_polyfit(self, model=None, df=None, **kwargs):
         poly_now = self.y_train_season_obj[-1]
         first_occ = np.where(self.y_train_season_obj == poly_now)
-        polynext = self.y_train_season_obj[first_occ[0][0] + self.step]
-        return polynext
+        return self.y_train_season_obj[first_occ[0][0] + self.step]
 
     def load_model(self, model_as_bytes: bytes) -> None:
         """Loads model_as_str and decodes into the class NowcastingModel.

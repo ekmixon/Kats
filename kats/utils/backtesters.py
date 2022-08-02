@@ -353,11 +353,11 @@ class BackTesterParent(ABC):
     ) -> None:
         training_splits, testing_splits = splits
 
-        num_splits = len(training_splits)
         if not self.multi:
             for train_split, test_split in zip(training_splits, testing_splits):
                 self._create_model(train_split, test_split)
         else:
+            num_splits = len(training_splits)
             pool = mp.Pool(processes=num_splits)
             futures = [
                 pool.apply_async(self._create_model, args=(train_split, test_split))
@@ -387,9 +387,8 @@ class BackTesterParent(ABC):
 
         if error_name in self.errors:
             return self.errors[error_name]
-        else:
-            logging.error("Invalid error name: {0}".format(error_name))
-            raise ValueError("Invalid error name")
+        logging.error("Invalid error name: {0}".format(error_name))
+        raise ValueError("Invalid error name")
 
     @abstractmethod
     def _create_train_test_splits(self):
@@ -1021,8 +1020,19 @@ class CrossValidation:
         self.errors = {}
         self.raw_errors = []
 
-        if not rolling_window:
-            self._backtester = BackTesterExpandingWindow(
+        self._backtester = (
+            BackTesterRollingWindow(
+                error_methods,
+                data,
+                params,
+                self.train_percentage,
+                self.test_percentage,
+                self.num_folds,
+                model_class,
+                multi=multi,
+            )
+            if rolling_window
+            else BackTesterExpandingWindow(
                 error_methods,
                 data,
                 params,
@@ -1033,17 +1043,7 @@ class CrossValidation:
                 model_class,
                 multi=multi,
             )
-        else:
-            self._backtester = BackTesterRollingWindow(
-                error_methods,
-                data,
-                params,
-                self.train_percentage,
-                self.test_percentage,
-                self.num_folds,
-                model_class,
-                multi=multi,
-            )
+        )
 
     # Run cross validation
     def run_cv(self) -> None:
@@ -1071,9 +1071,8 @@ class CrossValidation:
 
         if error_name in self.errors:
             return self.errors[error_name]
-        else:
-            logging.error("Invalid error name: {0}".format(error_name))
-            raise ValueError("Invalid error name")
+        logging.error("Invalid error name: {0}".format(error_name))
+        raise ValueError("Invalid error name")
 
 
 def _get_percent_size(size: int, percent: float) -> int:

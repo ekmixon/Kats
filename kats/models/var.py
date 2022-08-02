@@ -52,9 +52,9 @@ class VARParams(Params):
 
     def __init__(self, **kwargs) -> None:
         super().__init__()
-        self.maxlags = kwargs.get("maxlags", None)
+        self.maxlags = kwargs.get("maxlags")
         self.method = kwargs.get("method", "ols")
-        self.ic = kwargs.get("ic", None)
+        self.ic = kwargs.get("ic")
         self.verbose = kwargs.get("verbose", False)
         self.trend = kwargs.get("trend", "c")
         logging.debug("Initialized VARParam instance.:{kwargs}".format(kwargs=kwargs))
@@ -63,7 +63,6 @@ class VARParams(Params):
         """Validate the parameters for VAR model"""
 
         logging.info("Method validate_params() is not implemented.")
-        pass
 
 
 class VARModel(m.Model):
@@ -194,8 +193,7 @@ class VARModel(m.Model):
         logging.debug(
             "Return forecast data: {fcst_dict}".format(fcst_dict=self.fcst_dict)
         )
-        ret = {k: TimeSeriesData(v) for k, v in self.fcst_dict.items()}
-        return ret
+        return {k: TimeSeriesData(v) for k, v in self.fcst_dict.items()}
 
     # pyre-fixme[14]: `plot` overrides method defined in `Model` inconsistently.
     # pyre-fixme[40]: Non-static method `plot` cannot override a static method

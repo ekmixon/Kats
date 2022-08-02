@@ -57,7 +57,7 @@ class Final(type):
         N/A
     """
 
-    def __new__(metacls, name, bases, classdict):
+    def __new__(cls, name, bases, classdict):
         """Checks if child class is instantiated. Throws an error if so.
 
         Args:
@@ -80,7 +80,7 @@ class Final(type):
                 raise TypeError(
                     "type '{0}' is not an acceptable base type".format(b.__name__)
                 )
-        return type.__new__(metacls, name, bases, dict(classdict))
+        return type.__new__(cls, name, bases, dict(classdict))
 
 
 class TimeSeriesEvaluationMetric(Metric):
@@ -151,12 +151,10 @@ class TimeSeriesEvaluationMetric(Metric):
         elif isinstance(evaluation_result, Number):
             evaluation_result = (evaluation_result, 0.0)
         elif (
-            isinstance(evaluation_result, tuple)
-            and len(evaluation_result) == 2
-            and all(isinstance(n, Number) for n in evaluation_result)
+            not isinstance(evaluation_result, tuple)
+            or len(evaluation_result) != 2
+            or not all(isinstance(n, Number) for n in evaluation_result)
         ):
-            pass
-        else:
             raise TypeError(
                 "Evaluation function should either return a single numeric "
                 "value that represents the error or a tuple of two numeric "
@@ -227,9 +225,7 @@ class TimeSeriesParameterTuning(ABC):
         if parameters is None:
             parameters = [{}]
         self.logger = logging.getLogger(__name__)
-        self.logger.info(
-            "Parameter tuning search space dimensions: {}".format(parameters)
-        )
+        self.logger.info(f"Parameter tuning search space dimensions: {parameters}")
         self.validate_parameters_format(parameters)
         self.parameters = [parameter_from_json(parameter) for parameter in parameters]
         self.outcome_constraints = (
@@ -243,12 +239,8 @@ class TimeSeriesParameterTuning(ABC):
         self._kats_search_space = SearchSpace(parameters=self.parameters)
         self.logger.info("Search space is created.")
         self.job_id = uuid.uuid4()
-        self.experiment_name = (
-            experiment_name if experiment_name else f"parameter_tuning_{self.job_id}"
-        )
-        self.objective_name = (
-            objective_name if objective_name else f"objective_{self.job_id}"
-        )
+        self.experiment_name = experiment_name or f"parameter_tuning_{self.job_id}"
+        self.objective_name = objective_name or f"objective_{self.job_id}"
         self.multiprocessing = multiprocessing
 
         self._exp = Experiment(
@@ -556,10 +548,10 @@ class SearchMethodFactory(metaclass=Final):
                 outcome_constraints=outcome_constraints,
                 multiprocessing=multiprocessing,
             )
-        elif (
-            selected_search_method == SearchMethodEnum.RANDOM_SEARCH_UNIFORM
-            or selected_search_method == SearchMethodEnum.RANDOM_SEARCH_SOBOL
-        ):
+        elif selected_search_method in [
+            SearchMethodEnum.RANDOM_SEARCH_UNIFORM,
+            SearchMethodEnum.RANDOM_SEARCH_SOBOL,
+        ]:
             return RandomSearch(
                 parameters=parameters,
                 experiment_name=experiment_name,
@@ -820,14 +812,15 @@ class BayesianOptSearch(TimeSeriesParameterTuning):
             " is created.".format(random_strategy=random_strategy)
         )
 
-        bootstrap_arms_for_bayes_opt = kwargs.get("bootstrap_arms_for_bayes_opt", None)
+        bootstrap_arms_for_bayes_opt = kwargs.get("bootstrap_arms_for_bayes_opt")
         if bootstrap_arms_for_bayes_opt is None:
             model_run = self._random_strategy_model.gen(n=bootstrap_size)
         else:
             bootstrap_arms_list = [
-                Arm(name="0_" + str(i), parameters=params)
+                Arm(name=f"0_{str(i)}", parameters=params)
                 for i, params in enumerate(bootstrap_arms_for_bayes_opt)
             ]
+
             model_run = GeneratorRun(bootstrap_arms_list)
 
         self.generator_run_for_search_method(

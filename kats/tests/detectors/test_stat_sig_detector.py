@@ -30,8 +30,9 @@ class TestStatSigDetector(TestCase):
         previous_seq = [date_start + timedelta(days=x) for x in range(60)]
         values = np.random.randn(len(previous_seq))
         ts_init = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq[0:30], "value": values[0:30]})
+            pd.DataFrame({"time": previous_seq[:30], "value": values[:30]})
         )
+
 
         ts_later = TimeSeriesData(
             pd.DataFrame({"time": previous_seq[30:35], "value": values[30:35]})
@@ -48,10 +49,10 @@ class TestStatSigDetector(TestCase):
     def test_pmm_use_case(self) -> None:
         random.seed(100)
         time_unit = 86400
-        hist_data_time = [x * time_unit for x in range(0, 28)]
+        hist_data_time = [x * time_unit for x in range(28)]
         data_time = [x * time_unit for x in range(28, 35)]
 
-        hist_data_value = [random.normalvariate(100, 10) for _ in range(0, 28)]
+        hist_data_value = [random.normalvariate(100, 10) for _ in range(28)]
         data_value = [random.normalvariate(130, 10) for _ in range(28, 35)]
 
         hist_ts = TimeSeriesData(
@@ -143,11 +144,12 @@ class TestStatSigDetector(TestCase):
         ts_init = TimeSeriesData(
             pd.DataFrame(
                 {
-                    **{"time": previous_seq[0:30]},
-                    **{f"value_{i}": values[i][0:30] for i in range(num_seq)},
+                    **{"time": previous_seq[:30]},
+                    **{f"value_{i}": values[i][:30] for i in range(num_seq)},
                 }
             )
         )
+
 
         ts_later = TimeSeriesData(
             pd.DataFrame(
@@ -178,11 +180,12 @@ class TestMultiStatSigDetector(TestCase):
         ts_init = TimeSeriesData(
             pd.DataFrame(
                 {
-                    **{"time": previous_seq[0:30]},
-                    **{f"value_{i}": values[i][0:30] for i in range(num_seq)},
+                    **{"time": previous_seq[:30]},
+                    **{f"value_{i}": values[i][:30] for i in range(num_seq)},
                 }
             )
         )
+
 
         ts_later = TimeSeriesData(
             pd.DataFrame(
@@ -204,11 +207,12 @@ class TestMultiStatSigDetector(TestCase):
         ts_init_renamed = TimeSeriesData(
             pd.DataFrame(
                 {
-                    **{"time": previous_seq[0:30]},
-                    **{f"ts_{i}": values[i][0:30] for i in range(num_seq)},
+                    **{"time": previous_seq[:30]},
+                    **{f"ts_{i}": values[i][:30] for i in range(num_seq)},
                 }
             )
         )
+
 
         ts_later_renamed = TimeSeriesData(
             pd.DataFrame(
@@ -328,11 +332,12 @@ class TestMultiStatSigDetector(TestCase):
         ts_init = TimeSeriesData(
             pd.DataFrame(
                 {
-                    **{"time": previous_seq[0:30]},
-                    **{f"value_{i}": values[i][0:30] for i in range(num_seq)},
+                    **{"time": previous_seq[:30]},
+                    **{f"value_{i}": values[i][:30] for i in range(num_seq)},
                 }
             )
         )
+
 
         ts_later = TimeSeriesData(
             pd.DataFrame(

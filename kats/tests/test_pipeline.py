@@ -24,10 +24,7 @@ statsmodels_ver = float(
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -84,7 +81,7 @@ class cupikTest(TestCase):
         self.assertEqual(np.sum(bools), 144)
         if statsmodels_ver < 0.12:
             self.assertEqual(fitted.predict(1).fcst.values[0], 433.328591954023)
-        elif statsmodels_ver >= 0.12:
+        else:
             self.assertEqual(fitted.predict(1).fcst.values[0], 433.1270492317991)
 
         # test if the model can be built on the output from the detector
@@ -98,5 +95,5 @@ class cupikTest(TestCase):
         self.assertEqual(len(pipe.metadata["trend_detector"][0]), 2)
         if statsmodels_ver < 0.12:
             self.assertEqual(fitted.predict(1).fcst.values[0], 433.328591954023)
-        elif statsmodels_ver >= 0.12:
+        else:
             self.assertEqual(fitted.predict(1).fcst.values[0], 433.1270492317991)

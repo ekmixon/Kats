@@ -31,10 +31,7 @@ print(os.getcwd())
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -52,7 +49,7 @@ else:
 
 TIME_COL_NAME = "ds"
 VALUE_COL_NAME = "y"
-MULTIVAR_VALUE_DF_COLS = [VALUE_COL_NAME, VALUE_COL_NAME + "_1"]
+MULTIVAR_VALUE_DF_COLS = [VALUE_COL_NAME, f"{VALUE_COL_NAME}_1"]
 
 EMPTY_DF = pd.DataFrame()
 EMPTY_TIME_SERIES = pd.Series([], name=DEFAULT_TIME_NAME)
@@ -241,7 +238,10 @@ class TimeSeriesDataInitTest(TimeSeriesBaseTest):
         # univariate data in US/Pacific Time Zone with missing data
         self.ts_univar_PST_missing_tz = TimeSeriesData(
             df=pd.DataFrame(
-                {"time": (self.unix_list[0:4] + self.unix_list[7:10]), "value": [0] * 7}
+                {
+                    "time": self.unix_list[:4] + self.unix_list[7:10],
+                    "value": [0] * 7,
+                }
             ),
             use_unix_time=True,
             unix_time_units="s",

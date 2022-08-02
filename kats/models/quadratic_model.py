@@ -43,7 +43,6 @@ class QuadraticModelParams(Params):
         Since the quadratic model does not require key parameters to be defined this is not required for this class
         """
         logging.info("Method validate_params() is not implemented.")
-        pass
 
 
 class QuadraticModel(m.Model):
@@ -111,7 +110,7 @@ class QuadraticModel(m.Model):
         if include_history:
             # pyre-fixme[16]: `QuadraticModel` has no attribute `_X_future`.
             # pyre-fixme[16]: `QuadraticModel` has no attribute `past_length`.
-            self._X_future = list(range(0, self.past_length + steps))
+            self._X_future = list(range(self.past_length + steps))
         else:
             self._X_future = list(range(self.past_length, self.past_length + steps))
         _X_fcst = np.column_stack([self._X_future, np.power(self._X_future, 2)])

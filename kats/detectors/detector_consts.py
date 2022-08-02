@@ -222,12 +222,13 @@ class PercentageChange:
         if self.num_series > 1:
             return np.array(
                 [
-                    False if self.upper[i] > 1.0 and self.lower[i] < 1 else True
+                    self.upper[i] <= 1.0 or self.lower[i] >= 1
                     for i in range(self.current.num_series)
                 ]
             )
+
         # not stat sig e.g. [0.88, 1.55]
-        return not (self.upper > 1.0 and self.lower < 1.0)
+        return self.upper <= 1.0 or self.lower >= 1.0
 
     @property
     def score(self) -> float:
@@ -249,31 +250,20 @@ class PercentageChange:
 
     @property
     def mean_difference(self) -> Union[float, np.ndarray]:
-        # pyre-ignore[6]: Expected `float` for 1st param but got `Union[float,
-        #  np.ndarray]`.
-        _mean_diff = self.current.mean_val - self.previous.mean_val
-        return _mean_diff
+        return self.current.mean_val - self.previous.mean_val
 
     @property
     def ci_upper(self) -> float:
         sp_mean = self._pooled_stddev()
         df = self._get_df()
 
-        # the minus sign here is non intuitive.
-        # this is because, for example, t.ppf(0.025, 30) ~ -1.96
-        _ci_upper = self.previous.mean_val - t.ppf(self.alpha / 2, df) * sp_mean
-
-        return _ci_upper
+        return self.previous.mean_val - t.ppf(self.alpha / 2, df) * sp_mean
 
     @property
     def ci_lower(self) -> float:
         sp_mean = self._pooled_stddev()
         df = self._get_df()
-        # the plus sign here is non-intuitive. See comment
-        # above
-        _ci_lower = self.previous.mean_val + t.ppf(self.alpha / 2, df) * sp_mean
-
-        return _ci_lower
+        return self.previous.mean_val + t.ppf(self.alpha / 2, df) * sp_mean
 
     def _get_df(self) -> float:
         """
@@ -281,9 +271,7 @@ class PercentageChange:
         """
         n_1 = len(self.previous)
         n_2 = len(self.current)
-        df = n_1 + n_2 - 2
-
-        return df
+        return n_1 + n_2 - 2
 
     def _pooled_stddev(self) -> float:
         """
@@ -299,12 +287,9 @@ class PercentageChange:
         if n_1 == 0 or n_2 == 0:
             return 0.0
 
-        # pyre-ignore[58]: * is not supported for operand types int and Union[float, np.ndarray].
-        s_p = np.sqrt(((n_1 - 1) * s_1_sq + (n_2 - 1) * s_2_sq) / (n_1 + n_2 - 2))
-
         # s_p_mean = s_p * np.sqrt((1. / n_1) + (1./ n_2))
 
-        return s_p
+        return np.sqrt(((n_1 - 1) * s_1_sq + (n_2 - 1) * s_2_sq) / (n_1 + n_2 - 2))
 
     def _ttest_manual(self) -> Tuple[float, float]:
         """
@@ -560,7 +545,7 @@ class AnomalyResponse:
         )
 
     def __str__(self) -> str:
-        str_ret = f"""
+        return f"""
         Time: {self.scores.time.values},
         Scores: {self.scores.value.values},
         Upper Confidence Bound: {self.confidence_band.upper.value.values},
@@ -568,5 +553,3 @@ class AnomalyResponse:
         Predicted Time Series: {self.predicted_ts.value.values},
         stat_sig:{self.stat_sig_ts.value.values}
         """
-
-        return str_ret

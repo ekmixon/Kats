@@ -65,9 +65,7 @@ def get_cp_index_from_threshold_score(
 ) -> List[int]:
     higher = np.where(score_val > threshold_high)[0]
     lower = np.where(score_val < threshold_low)[0]
-    cp_list = list(set(higher).union(set(lower)))
-
-    return cp_list
+    return list(set(higher).union(set(lower)))
 
 
 def get_cp_index_from_detector_model(
@@ -78,16 +76,13 @@ def get_cp_index_from_detector_model(
 ) -> List[int]:
 
     score_val = anom_obj.scores.value.values
-    if alert_style_cp:
-        cp_list = get_cp_index_from_alert_score(
+    return (
+        get_cp_index_from_alert_score(score_val, threshold_low, threshold_high)
+        if alert_style_cp
+        else get_cp_index_from_threshold_score(
             score_val, threshold_low, threshold_high
         )
-    else:
-        cp_list = get_cp_index_from_threshold_score(
-            score_val, threshold_low, threshold_high
-        )
-
-    return cp_list
+    )
 
 
 # modified from https://github.com/alan-turing-institute/TCPDBench/blob/master/analysis/scripts/metrics.py
@@ -184,9 +179,7 @@ def measure(
 
     F = P * R / (alpha * R + (1 - alpha) * P)
 
-    score_dict = {"f_score": F, "precision": P, "recall": R, "delay": D}
-
-    return score_dict
+    return {"f_score": F, "precision": P, "recall": R, "delay": D}
 
 
 def generate_from_simulator(
@@ -238,18 +231,17 @@ class EvalAggregate:
         self.eval_df = None
 
     def get_eval_dataframe(self) -> pd.DataFrame:
-        df_list = []
+        df_list = [
+            {
+                "dataset_name": this_eval.dataset_name,
+                "precision": this_eval.precision,
+                "recall": this_eval.recall,
+                "f_score": this_eval.f_score,
+                "delay": this_eval.delay,
+            }
+            for this_eval in self.eval_list
+        ]
 
-        for this_eval in self.eval_list:
-            df_list.append(
-                {
-                    "dataset_name": this_eval.dataset_name,
-                    "precision": this_eval.precision,
-                    "recall": this_eval.recall,
-                    "f_score": this_eval.f_score,
-                    "delay": this_eval.delay,
-                }
-            )
 
         self.eval_df = pd.DataFrame(df_list)
         return self.eval_df
@@ -257,28 +249,22 @@ class EvalAggregate:
     def get_avg_precision(self) -> float:
         if self.eval_df is None:
             _ = self.get_eval_dataframe()
-        avg_precision = np.mean(self.eval_df.precision)
-
-        return avg_precision
+        return np.mean(self.eval_df.precision)
 
     def get_avg_recall(self) -> float:
         if self.eval_df is None:
             _ = self.get_eval_dataframe()
-        avg_recall = np.mean(self.eval_df.recall)
-
-        return avg_recall
+        return np.mean(self.eval_df.recall)
 
     def get_avg_f_score(self) -> float:
         if self.eval_df is None:
             _ = self.get_eval_dataframe()
-        avg_f_score = np.mean(self.eval_df.f_score)
-        return avg_f_score
+        return np.mean(self.eval_df.f_score)
 
     def get_avg_delay(self) -> float:
         if self.eval_df is None:
             _ = self.get_eval_dataframe()
-        avg_delay = np.mean(self.eval_df.delay)
-        return avg_delay
+        return np.mean(self.eval_df.delay)
 
 
 class TuringEvaluator(BenchmarkEvaluator):
@@ -396,9 +382,7 @@ class TuringEvaluator(BenchmarkEvaluator):
             )
             # break
         self.eval_agg = EvalAggregate(eval_list)
-        eval_df = self.eval_agg.get_eval_dataframe()
-
-        return eval_df
+        return self.eval_agg.get_eval_dataframe()
 
     def _evaluate_detector(
         self,
@@ -438,9 +422,7 @@ class TuringEvaluator(BenchmarkEvaluator):
             )
             # break
         self.eval_agg = EvalAggregate(eval_list)
-        eval_df = self.eval_agg.get_eval_dataframe()
-
-        return eval_df
+        return self.eval_agg.get_eval_dataframe()
 
     def get_eval_aggregate(self):
         """
@@ -461,7 +443,7 @@ class TuringEvaluator(BenchmarkEvaluator):
             cp_arr=[50, 100, 150], level_arr=[1.1, 1.05, 1.35, 1.2]
         )
 
-        eg_df = pd.DataFrame(
+        return pd.DataFrame(
             [
                 {
                     "dataset_name": "eg_1",
@@ -475,8 +457,6 @@ class TuringEvaluator(BenchmarkEvaluator):
                 },
             ]
         )
-
-        return eg_df
 
     def _parse_data(self, df_row: Any):
         this_dataset = df_row["dataset_name"]

@@ -24,10 +24,7 @@ statsmodels_ver = float(
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -50,7 +47,7 @@ def gen_trend_data_ndim(
     np.random.seed(20)
 
     n_days = len(time)
-    ix = np.array([np.arange(n_days) for i in range(ndim)])
+    ix = np.array([np.arange(n_days) for _ in range(ndim)])
     initial = np.random.randint(9000.0, 10000.0, size=(ndim, 1))
     trend_change = -np.random.randint(60, size=(ndim, 1))
     trend = np.random.randint(2.0, 6.0, size=(ndim, 1))

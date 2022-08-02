@@ -40,10 +40,7 @@ statsmodels_ver = float(
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -122,10 +119,10 @@ class TestChangepointEvaluator(TestCase):
         val = np.random.randn(len(date_range_start))
 
         eg_anno = {"1": [2, 6, 10], "2": [3, 6]}
-        y_m_d_dict = {k: v for k, v in zip(y_m_d_str, val)}
-        y_m_dict = {k: v for k, v in zip(y_m_str, val)}
-        int_dict = {k: v for k, v in zip(int_str, val)}
-        int_val_dict = {k: v for k, v in zip(int_val, val)}
+        y_m_d_dict = dict(zip(y_m_d_str, val))
+        y_m_dict = dict(zip(y_m_str, val))
+        int_dict = dict(zip(int_str, val))
+        int_val_dict = dict(zip(int_val, val))
 
         eg_df = pd.DataFrame(
             [
@@ -239,9 +236,9 @@ class TestChangepointEvaluator(TestCase):
 
         val_daily = np.random.randn(len(date_range_start_daily))
 
-        y_m_d_dict_daily = {k: v for k, v in zip(y_m_d_str_daily, val_daily)}
-        int_dict_daily = {k: v for k, v in zip(int_daily, val_daily)}
-        int_str_dict_daily = {k: v for k, v in zip(int_str_daily, val_daily)}
+        y_m_d_dict_daily = dict(zip(y_m_d_str_daily, val_daily))
+        int_dict_daily = dict(zip(int_daily, val_daily))
+        int_str_dict_daily = dict(zip(int_str_daily, val_daily))
 
         eg_df_daily = pd.DataFrame(
             [

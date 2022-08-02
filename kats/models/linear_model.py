@@ -43,7 +43,6 @@ class LinearModelParams(Params):
         Since the linear model does not require key parameters to be defined this is not required for this class
         """
         logging.info("Method validate_params() is not implemented.")
-        pass
 
 
 class LinearModel(m.Model):
@@ -102,7 +101,7 @@ class LinearModel(m.Model):
         self.include_history = include_history
 
         if include_history:
-            self._X_future = list(range(0, self.past_length + steps))
+            self._X_future = list(range(self.past_length + steps))
         else:
             self._X_future = list(range(self.past_length, self.past_length + steps))
 

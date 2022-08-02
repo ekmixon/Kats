@@ -56,10 +56,7 @@ SAMPLE_INPUT_TS_BOCPD_SCALED = pd.DataFrame(
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -444,7 +441,7 @@ class TSfeaturesTest(TestCase):
                     "value": [1, 4, 9, 4, 5, 5, 7, 2, 5, 1, 6, 3, 6, 5, 5],
                 }
             )
-        elif statsmodels_ver >= 0.12:
+        else:
             df = pd.DataFrame(
                 {
                     "time": range(20),
@@ -504,7 +501,7 @@ class TSfeaturesTest(TestCase):
                     "hw_gamma": 0.947,
                 },
             )
-        elif statsmodels_ver >= 0.12:
+        else:
             self.assertEqual(
                 feats,
                 {

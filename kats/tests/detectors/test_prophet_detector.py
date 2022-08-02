@@ -27,10 +27,7 @@ statsmodels_ver = float(
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -98,7 +95,7 @@ class TestProphetDetector(TestCase):
         # anomaly_sim.add_noise(magnitude=0.3 * magnitude * np.random.rand())
 
         anomaly_ts = anomaly_sim.stl_sim()
-        for i in range(0, length):
+        for i in range(length):
             ts.value.iloc[start_index + i] += anomaly_ts.value[i]
 
     def truncate(self, ts, start_index, end_index):
@@ -136,8 +133,7 @@ class TestProphetDetector(TestCase):
     def merge_ts(self, ts1, ts2):
         ts1_df, ts2_df = ts1.to_dataframe(), ts2.to_dataframe()
         merged_df = (ts1_df.set_index("time") + ts2_df.set_index("time")).reset_index()
-        merged_ts = TimeSeriesData(df=merged_df)
-        return merged_ts
+        return TimeSeriesData(df=merged_df)
 
     def add_multi_event(
         self,
@@ -222,10 +218,7 @@ class TestProphetDetector(TestCase):
         events12_ts = self.merge_ts(event1_ts, event2_ts)
         event_ts = self.merge_ts(events12_ts, event3_ts)
 
-        # merge baseline and event ts
-        merged_ts = self.merge_ts(baseline_ts, event_ts)
-
-        return merged_ts
+        return self.merge_ts(baseline_ts, event_ts)
 
     def calc_stds(self, predicted_val, upper_bound, lower_bound):
         actual_upper_std = (50 ** 0.5) * (upper_bound - predicted_val) / 0.8
@@ -246,7 +239,7 @@ class TestProphetDetector(TestCase):
 
     def test_no_anomaly(self) -> None:
         # Prophet should not find any anomalies on a well formed synthetic time series
-        for i in range(0, 5):
+        for i in range(5):
             ts = self.create_random_ts(i, 100, 10, 2)
 
             model = ProphetDetectorModel()
@@ -264,7 +257,7 @@ class TestProphetDetector(TestCase):
 
     def test_anomaly(self) -> None:
         # Prophet should find anomalies
-        for i in range(0, 5):
+        for i in range(5):
             ts = self.create_random_ts(i, 100, 10, 2)
             self.add_smooth_anomaly(ts, i, 90, 10, 10)
 

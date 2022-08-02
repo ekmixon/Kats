@@ -329,8 +329,8 @@ class TsFeatures:
                 f2g[f] = k
 
         self._total_feature_len_ = len(f2g)
-        for f in kwargs.keys():
-            if not (f in f2g.keys() or f in g2f.keys()):
+        for f in kwargs:
+            if f not in f2g and f not in g2f:
                 msg = (
                     f"couldn't find your desired feature/group '{f}', please "
                     "check spelling"
@@ -347,22 +347,22 @@ class TsFeatures:
         kwargs: Dict[str, Any],
     ) -> Tuple[Dict[str, bool], bool]:
         default = not selected_features
-        final_filter = {k: default for k in f2g.keys()}
+        final_filter = {k: default for k in f2g}
         if selected_features:
             for f in selected_features:
-                if not (f in f2g.keys() or f in g2f.keys()):
+                if f not in f2g and f not in g2f:
                     msg = (
                         f"couldn't find your desired feature/group '{f}', please "
                         "check spelling"
                     )
                     logging.error(msg)
                     raise ValueError(msg)
-                if f in g2f.keys():  # the opt-in request is for a feature group
+                if f in g2f:  # the opt-in request is for a feature group
                     kwargs[f] = True
                     for feature in g2f[f]:
                         kwargs[feature] = kwargs.get(feature, True)
                         final_filter[feature] = True
-                elif f in f2g.keys():  # the opt-in request is for a certain feature
+                elif f in f2g:  # the opt-in request is for a certain feature
                     if not kwargs.get(f2g[f], True):
                         msg = (
                             f"feature group: {f2g[f]} has to be opt-in based on "
@@ -380,7 +380,7 @@ class TsFeatures:
 
         # final filter for filtering out features user didn't request and
         # keep only the requested ones
-        final_filter.update(kwargs)
+        final_filter |= kwargs
         return final_filter, default
 
     def _set_defaults(self, kwargs: Dict[str, Any], default: bool) -> None:
@@ -428,7 +428,7 @@ class TsFeatures:
         """Map method names to method instances for _transform_1d."""
         for method, _ in _ALL_TS_FEATURES:
             method_name = f"get_{method}"
-            func = vars(TsFeatures).get(method_name, None)
+            func = vars(TsFeatures).get(method_name)
             assert func is not None, (
                 "Internal error: ",
                 f"TsFeatures.{method_name} does not exist",
@@ -490,10 +490,9 @@ class TsFeatures:
                 ts_features.append(self._transform_1d(ts_values, x.value[col]))
 
         # performing final filter
-        to_remove = []
-        for feature in ts_features:
-            if not self.final_filter[feature]:
-                to_remove.append(feature)
+        to_remove = [
+            feature for feature in ts_features if not self.final_filter[feature]
+        ]
 
         for r in to_remove:
             del ts_features[r]
@@ -524,7 +523,7 @@ class TsFeatures:
                 else:
                     more_features = func(x, **params)
                 logging.debug(f"...generated {more_features}")
-                features.update(more_features)
+                features |= more_features
         return features
 
     # length
@@ -641,10 +640,6 @@ class TsFeatures:
         return np.var(v)
 
     @staticmethod
-    # Numba bug on Python 3.7 only causes this to return only the first feature
-    # in dict_features. Disable until we drop 3.7 support.
-    # https://github.com/numba/numba/issues/7215
-    # @jit(forceobj=True)
     def get_statistics(
         x: np.ndarray,
         dict_features: Optional[Dict[str, Callable]] = None,
@@ -671,11 +666,11 @@ class TsFeatures:
         if dict_features is None:
             dict_features = {}
 
-        result = {}
-        for k, v in dict_features.items():
-            if extra_args.get(k, default_status):
-                result[k] = v(x)
-        return result
+        return {
+            k: v(x)
+            for k, v in dict_features.items()
+            if extra_args.get(k, default_status)
+        }
 
     # STL decomposition based features
     @staticmethod
@@ -830,7 +825,7 @@ class TsFeatures:
             return np.nan
 
         max_run_length = 0
-        window_size = int(len(x) / nbins)
+        window_size = len(x) // nbins
         for i in range(0, len(x), window_size):
             run_length = np.max(
                 [len(list(v)) for k, v in groupby(x[i : i + window_size])]
@@ -864,7 +859,7 @@ class TsFeatures:
         poly = np.polyfit(np.log(lags), np.log(tau), 1)
 
         # Return the Hurst exponent from the polyfit output
-        return poly[0] if not np.isnan(poly[0]) else 0
+        return 0 if np.isnan(poly[0]) else poly[0]
 
     # ACF and PACF features
     # ACF features
@@ -1120,11 +1115,10 @@ class TsFeatures:
         """
 
         median = np.median(x)
-        cp = 0
-        for i in range(len(x) - 1):
-            if x[i] <= median < x[i + 1] or x[i] >= median > x[i + 1]:
-                cp += 1
-        return cp
+        return sum(
+            x[i] <= median < x[i + 1] or x[i] >= median > x[i + 1]
+            for i in range(len(x) - 1)
+        )
 
     # binarize mean
     @staticmethod
@@ -1304,7 +1298,7 @@ class TsFeatures:
                 )
                 if statsmodels_ver < 0.12:
                     holt_params_features["holt_beta"] = m.params["smoothing_slope"]
-                elif statsmodels_ver >= 0.12:
+                else:
                     holt_params_features["holt_beta"] = m.params["smoothing_trend"]
         except Exception as e:
             logging.warning(f"Holt Linear failed {e}")
@@ -1349,14 +1343,14 @@ class TsFeatures:
                 _args_["use_boxcox"] = True
                 _args_["initialization_method"] = "estimated"
                 m = ExponentialSmoothing(x, **_args_).fit()
-            elif statsmodels_ver < 0.12:
+            else:
                 m = ExponentialSmoothing(x, **_args_).fit(use_boxcox=True)
             if extra_args is not None and extra_args.get("hw_alpha", default_status):
                 hw_params_features["hw_alpha"] = m.params["smoothing_level"]
             if extra_args is not None and extra_args.get("hw_beta", default_status):
                 if statsmodels_ver < 0.12:
                     hw_params_features["hw_beta"] = m.params["smoothing_slope"]
-                elif statsmodels_ver >= 0.12:
+                else:
                     hw_params_features["hw_beta"] = m.params["smoothing_trend"]
             if extra_args is not None and extra_args.get("hw_gamma", default_status):
                 hw_params_features["hw_gamma"] = m.params["smoothing_seasonal"]
@@ -1800,7 +1794,6 @@ class TsFeatures:
             (4) Mean of LAG time series, (5) Means of MACD, MACDsign, and
             MACDdiff from Kats Nowcasting.
         """
-        nowcasting_features = {}
         features = [
             "nowcast_roc",
             "nowcast_mom",
@@ -1810,9 +1803,11 @@ class TsFeatures:
             "nowcast_macdsign",
             "nowcast_macddiff",
         ]
-        for feature in features:
-            if extra_args is not None and extra_args.get(feature, default_status):
-                nowcasting_features[feature] = np.nan
+        nowcasting_features = {
+            feature: np.nan
+            for feature in features
+            if extra_args is not None and extra_args.get(feature, default_status)
+        }
 
         try:
             _features = TsFeatures._get_nowcasting_np(

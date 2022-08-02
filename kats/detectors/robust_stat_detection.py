@@ -98,7 +98,7 @@ class RobustStatDetector(Detector):
 
         plt.plot(data_df[time_col_name].to_numpy(), data_df[val_col_name].to_numpy())
 
-        if len(change_points) == 0:
+        if not change_points:
             logging.warning("No change points detected!")
 
         for change in change_points:

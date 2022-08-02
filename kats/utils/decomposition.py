@@ -48,7 +48,7 @@ class TimeSeriesDecomposition:
             logging.error(msg)
             raise ValueError(msg)
         self.data = data
-        if decomposition in ("additive", "multiplicative"):
+        if decomposition in {"additive", "multiplicative"}:
             self.decomposition = decomposition
         else:
             logging.info(
@@ -68,10 +68,10 @@ class TimeSeriesDecomposition:
             self.method = self.__decompose_STL
 
         ## The following are params for the STL Module
-        self.period = kwargs.get("period", None)
+        self.period = kwargs.get("period")
         self.seasonal = kwargs.get("seasonal", 7)
-        self.trend = kwargs.get("trend", None)
-        self.low_pass = kwargs.get("low_pass", None)
+        self.trend = kwargs.get("trend")
+        self.low_pass = kwargs.get("low_pass")
         self.seasonal_deg = kwargs.get("seasonal_deg", 1)
         self.trend_deg = kwargs.get("trend_deg", 1)
         self.low_pass_deg = kwargs.get("low_pass_deg", 1)
@@ -112,14 +112,13 @@ class TimeSeriesDecomposition:
     def _get_period(self) -> Optional[int]:
         period = self.period
         freq = self.freq
-        if period is None:
-            if freq is not None and "T" in freq:
-                logging.warning(
-                    """Seasonal Decompose cannot handle sub day level granularity.
+        if period is None and freq is not None and "T" in freq:
+            logging.warning(
+                """Seasonal Decompose cannot handle sub day level granularity.
                     Please consider setting period yourself based on the input data.
                     Defaulting to a period of 2."""
-                )
-                period = 2
+            )
+            period = 2
         return period
 
     def __decompose_seasonal(self, original: pd.DataFrame) -> Dict[str, pd.DataFrame]:

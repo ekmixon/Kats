@@ -46,9 +46,9 @@ class ARIMAParams(Params):
         self.p = p
         self.d = d
         self.q = q
-        self.exog = kwargs.get("exog", None)
-        self.dates = kwargs.get("dates", None)
-        self.freq = kwargs.get("freq", None)
+        self.exog = kwargs.get("exog")
+        self.dates = kwargs.get("dates")
+        self.freq = kwargs.get("freq")
         logging.debug(
             "Initialized ARIMAParams with parameters. "
             "p:{p}, d:{d}, q:{q}, kwargs:{kwargs}".format(p=p, d=d, q=q, kwargs=kwargs)
@@ -56,7 +56,6 @@ class ARIMAParams(Params):
 
     def validate_params(self):
         logging.info("Method validate_params() is not implemented.")
-        pass
 
 
 class ARIMAModel(m.Model):
@@ -186,7 +185,7 @@ class ARIMAModel(m.Model):
             "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         self.include_history = include_history
-        self.exog = kwargs.get("exog", None)
+        self.exog = kwargs.get("exog")
         self.alpha = kwargs.get("alpha", 0.05)
         self.freq = kwargs.get("freq", pd.infer_freq(self.data.time))
         fcst = self.model.forecast(steps, exog=self.exog, alpha=self.alpha)

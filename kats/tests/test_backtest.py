@@ -93,10 +93,7 @@ error_funcs = {  # Maps error name to function that calculates error
 
 def load_data(file_name):
     ROOT = "kats"
-    if "kats" in os.getcwd().lower():
-        path = "data/"
-    else:
-        path = "kats/data/"
+    path = "data/" if "kats" in os.getcwd().lower() else "kats/data/"
     data_object = pkgutil.get_data(ROOT, path + file_name)
     return pd.read_csv(io.BytesIO(data_object), encoding="utf8")
 
@@ -260,7 +257,7 @@ class ExpandingWindowBackTesterTest(unittest.TestCase):
 
         # Training local model and getting predictions
         true_errors = {}  # Dict to store errors
-        for i in range(0, len(self.train_folds)):
+        for i in range(len(self.train_folds)):
             train_fold = self.train_folds[i]
             test_fold = self.test_folds[i]
             temp_model = self.model_class(
@@ -276,10 +273,7 @@ class ExpandingWindowBackTesterTest(unittest.TestCase):
             truth = np.array(test_fold["y"])
             train = np.array(train_fold["y"])
             for error, func in error_funcs.items():
-                if error == "mase":
-                    err = func(train, pred, truth)
-                else:
-                    err = func(pred, truth)
+                err = func(train, pred, truth) if error == "mase" else func(pred, truth)
                 if error in true_errors:
                     true_errors[error].append(err)
                 else:
@@ -446,7 +440,7 @@ class RollingWindowBackTesterTest(unittest.TestCase):
 
         # Training local model and getting predictions
         true_errors = {}  # Dict to store errors
-        for i in range(0, len(self.train_folds)):
+        for i in range(len(self.train_folds)):
             train_fold = self.train_folds[i]
             test_fold = self.test_folds[i]
             temp_model = self.model_class(
@@ -462,10 +456,7 @@ class RollingWindowBackTesterTest(unittest.TestCase):
             truth = np.array(test_fold["y"])
             train = np.array(train_fold["y"])
             for error, func in error_funcs.items():
-                if error == "mase":
-                    err = func(train, pred, truth)
-                else:
-                    err = func(pred, truth)
+                err = func(train, pred, truth) if error == "mase" else func(pred, truth)
                 if error in true_errors:
                     true_errors[error].append(err)
                 else:
@@ -668,7 +659,7 @@ class CrossValidationTest(unittest.TestCase):
         ]  # Once for ground truth once for CV
 
         # Iterate through folds and train model to produce ground truth
-        for i in range(0, len(expanding_train_folds)):
+        for i in range(len(expanding_train_folds)):
             train_fold = expanding_train_folds[i]
             test_fold = expanding_test_folds[i]
             temp_model = self.model_class(
@@ -690,10 +681,7 @@ class CrossValidationTest(unittest.TestCase):
             #  but got `typing_extensions.Literal['y']`.
             train = np.array(train_fold["y"])
             for error, func in error_funcs.items():
-                if error == "mase":
-                    err = func(train, pred, truth)
-                else:
-                    err = func(pred, truth)
+                err = func(train, pred, truth) if error == "mase" else func(pred, truth)
                 if error in true_errors:
                     true_errors[error].append(err)
                 else:
@@ -805,7 +793,7 @@ class CrossValidationTest(unittest.TestCase):
         ]  # Once for ground truth once for CV
 
         # Iterate through folds and train model to produce ground truth
-        for i in range(0, len(rolling_train_folds)):
+        for i in range(len(rolling_train_folds)):
             train_fold = rolling_train_folds[i]
             test_fold = rolling_test_folds[i]
             temp_model = self.model_class(
@@ -827,10 +815,7 @@ class CrossValidationTest(unittest.TestCase):
             #  but got `typing_extensions.Literal['y']`.
             train = np.array(train_fold["y"])
             for error, func in error_funcs.items():
-                if error == "mase":
-                    err = func(train, pred, truth)
-                else:
-                    err = func(pred, truth)
+                err = func(train, pred, truth) if error == "mase" else func(pred, truth)
                 if error in true_errors:
                     true_errors[error].append(err)
                 else:
